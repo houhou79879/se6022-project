@@ -190,8 +190,11 @@ if __name__=='__main__':
     # Native runs stay on loopback. The container image passes 0.0.0.0 and
     # Docker publishes it only on host 127.0.0.1:8765.
     parser.add_argument('--host',default='127.0.0.1')
+    # The container writes to /tmp/runtime (writable tmpfs) because /app is
+    # read-only and /app/runtime may be root-owned after a volume mount.
+    parser.add_argument('--data-dir',default=None)
     args=parser.parse_args()
-    server=make_server(args.port,host=args.host)
+    server=make_server(args.port,data_dir=args.data_dir,host=args.host)
     print(f'FileAgent local operator demo: http://127.0.0.1:{server.server_port}',flush=True)
     try: server.serve_forever()
     except KeyboardInterrupt: server.server_close()

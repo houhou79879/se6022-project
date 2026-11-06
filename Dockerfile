@@ -28,10 +28,10 @@ COPY --chown=10001:10001 tests ./tests
 COPY --chown=10001:10001 scripts ./scripts
 COPY --chown=10001:10001 server.py README.md ./
 
-RUN mkdir -p /app/runtime && chown -R 10001:10001 /app
+RUN chown -R 10001:10001 /app
 
-# No VOLUME declaration: compose mounts /app/runtime as tmpfs so the non-root
-# process can always write. For `docker run`, pass `--tmpfs /app/runtime`.
+# Runtime data lives under /tmp/runtime (a writable tmpfs in compose/smoke),
+# so the read-only image never needs a writable /app.
 USER 10001:10001
 
 EXPOSE 8765
@@ -39,4 +39,4 @@ EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/config', timeout=3)"
 
-CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "8765"]
+CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "8765", "--data-dir", "/tmp/runtime"]

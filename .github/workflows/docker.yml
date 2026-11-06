@@ -35,7 +35,6 @@ jobs:
           docker run -d --name fileagent-smoke \
             --read-only \
             --tmpfs /tmp \
-            --tmpfs /app/runtime \
             --cap-drop ALL \
             --security-opt no-new-privileges:true \
             -p 127.0.0.1:8765:8765 \
