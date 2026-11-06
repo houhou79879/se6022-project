@@ -96,7 +96,7 @@ V3 的实测攻击是 `RESTRICTED/credentials.txt`，依赖 Windows 大小写不
 docker compose run --rm --no-deps fileagent python -m unittest discover -s tests -v
 ```
 
-GitHub Actions 也会在 `ubuntu-latest` 上执行同样的构建和容器内测试（`.github/workflows/docker.yml`）。本机没有 Docker/WSL2，所以本地没有执行 `docker build`；以 CI 结果为准。
+GitHub Actions 会在 `ubuntu-latest` 上执行同样的构建、容器内 31 个测试和一次 HTTP smoke（启动容器并请求 `/api/config`）。工作流：[.github/workflows/docker.yml](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml)。本机没有 Docker/WSL2，所以本地没有执行 `docker build`；以 CI 结果为准。
 
 ## 预期结果
 
@@ -120,4 +120,4 @@ GitHub Actions 也会在 `ubuntu-latest` 上执行同样的构建和容器内测
 
 - 这是 Linux 容器版本，不覆盖 Windows 容器语义；`start.ps1` 不使用，入口是 `python server.py`。
 - 镜像不包含 `docs/`、`notebooks/` 和 `scripts/build_notebook.py`；notebook 构建请在原生环境执行（需要 IPython）。
-- 本机 Windows 10 Home 没有 Docker/WSL2，无法本地构建；Dockerfile 由 GitHub Actions 在 Linux 上验证。
+- 本机 Windows 10 Home 没有 Docker/WSL2，无法本地构建；GitHub Actions 在 Linux 上验证构建、容器内测试和 HTTP smoke。

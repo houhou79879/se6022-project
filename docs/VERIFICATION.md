@@ -6,7 +6,7 @@
 - Full DeepSeek 8-case matrix regenerated in `artifacts/assessment-deepseek.*`: vulnerable V2/V3/V4/V6/V7/V8 = FAIL (observed damage), V1/V5 = PASS only because the model refused to act; hardened all PASS. GO remains bounded to the laboratory scope.
 - Mock matrix regenerated in `artifacts/assessment.*`; notebook rebuilt with the current scenarios: 25 cells, 12 code cells executed, nbformat validated.
 - DeepSeek adapter tested with controlled transport fixtures through the real executor; live calls used the configured key. No key is written to any evidence file.
-- Docker/Linux: `Dockerfile`, `compose.yaml`, `.dockerignore` and `.github/workflows/docker.yml` build the image and run 31 tests inside the Linux container. Local Windows 10 Home has no Docker/WSL2, so `docker build` was not executed locally; the GitHub Actions run is the Docker verification.
+- Docker/Linux: `Dockerfile`, `compose.yaml`, `.dockerignore` and `.github/workflows/docker.yml` build the image, run 31 tests inside the Linux container, and smoke-test `/api/config` over the mapped port. Local Windows 10 Home has no Docker/WSL2, so `docker build` was not executed locally; the GitHub Actions run is the Docker verification: https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml
 - Browser QA: normal flow, scenario dialog/run, before/after matrix, hardened write approval, responsive layouts. Desktop screenshot: `artifacts/demo-console.png`.
 - Independent review findings were reproduced and corrected with regression tests.
 - Final browser run also verified restore, KS/PSI, NO-GO → bounded-demo GO and a real Markdown download to Downloads/fileagent-report.md.

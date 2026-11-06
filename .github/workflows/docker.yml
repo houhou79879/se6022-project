@@ -27,3 +27,20 @@ jobs:
             --security-opt no-new-privileges:true \
             fileagent-secops:ci \
             python -m unittest discover -s tests -v
+
+      - name: Start the server and smoke-test the HTTP surface
+        run: |
+          docker run -d --name fileagent-smoke \
+            --read-only \
+            --tmpfs /tmp \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            -p 127.0.0.1:8765:8765 \
+            fileagent-secops:ci
+          trap 'docker rm -f fileagent-smoke >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8765/api/config >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8765/api/config | python -c "import json,sys; d=json.load(sys.stdin); assert len(d['scenarios'])==8; print('scenarios=', len(d['scenarios']))"
+          docker logs --tail 20 fileagent-smoke

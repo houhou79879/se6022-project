@@ -25,7 +25,7 @@ Linux 容器版用于换平台/CI 复现；原生 Windows 仍是课程演示和�
 docker compose up --build
 ```
 
-打开 http://127.0.0.1:8765/console 。宿主机 8765 需空闲；数据在命名卷 `fileagent-runtime`。详见 `docs/DOCKER.md`。
+打开 http://127.0.0.1:8765/console 。宿主机 8765 需空闲；数据在命名卷 `fileagent-runtime`。详见 `docs/DOCKER.md`。CI 在 Linux 上 build 镜像、跑 31 个测试并做 HTTP smoke：[docker-linux](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml)。
 
 ## DeepSeek
 
