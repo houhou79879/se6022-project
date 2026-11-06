@@ -83,7 +83,7 @@ docker compose cp fileagent:/app/runtime/sessions ./runtime-copy
 
 ## 为什么固定 8765
 
-`server.py` 的 `local()` 会校验 `Host`/`Origin` 是否匹配实际监听端口。Compose 固定 `127.0.0.1:8765:8765`，所以浏览器地址也必须是 `127.0.0.1:8765`。如果改成 `8080:8765`，Host 变成 `127.0.0.1:8080`，请求会被拒绝。
+`server.py` 在容器内绑定 `0.0.0.0`（Dockerfile 的 `CMD` 传入 `--host 0.0.0.0`），Compose 只把宿主机 `127.0.0.1:8765` 映射到容器 8765；原生 `python server.py` 仍默认绑定 `127.0.0.1`。`local()` 会校验 `Host`/`Origin` 是否匹配监听端口，所以浏览器地址也必须是 `127.0.0.1:8765`。如果改成 `8080:8765`，Host 变成 `127.0.0.1:8080`，请求会被拒绝。
 
 ## V3 的跨平台处理
 

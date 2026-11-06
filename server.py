@@ -17,7 +17,7 @@ from fileagent.scenarios import SCENARIOS
 
 BASE=Path(__file__).resolve().parent
 
-def make_server(port=8765,data_dir=None):
+def make_server(port=8765,data_dir=None,host='127.0.0.1'):
     lab=Lab(data_dir or BASE/'runtime')
     token=secrets.token_urlsafe(32)
     executor=ThreadPoolExecutor(max_workers=2)
@@ -173,7 +173,7 @@ def make_server(port=8765,data_dir=None):
             except (KeyError,ValueError,TypeError) as e: self.send({'error':str(e)},400)
             except Exception as e: self.send({'error':type(e).__name__+': '+str(e)},500)
 
-    server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
+    server=ThreadingHTTPServer((host,port),Handler)
     server.lab=lab
     return server
 
@@ -187,8 +187,11 @@ if __name__=='__main__':
                 os.environ.setdefault(name, value.strip())
     parser=argparse.ArgumentParser()
     parser.add_argument('--port',type=int,default=8765)
+    # Native runs stay on loopback. The container image passes 0.0.0.0 and
+    # Docker publishes it only on host 127.0.0.1:8765.
+    parser.add_argument('--host',default='127.0.0.1')
     args=parser.parse_args()
-    server=make_server(args.port)
+    server=make_server(args.port,host=args.host)
     print(f'FileAgent local operator demo: http://127.0.0.1:{server.server_port}',flush=True)
     try: server.serve_forever()
     except KeyboardInterrupt: server.server_close()
