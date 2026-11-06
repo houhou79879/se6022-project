@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate Compose file
+        run: docker compose config --quiet
+
       - name: Build the Linux image
         run: docker build -t fileagent-secops:ci .
 
