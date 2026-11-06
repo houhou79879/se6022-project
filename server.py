@@ -12,7 +12,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse,parse_qs
 
-from fileagent.engine import Lab
+from fileagent.engine import Lab, redact
 from fileagent.scenarios import SCENARIOS
 
 BASE=Path(__file__).resolve().parent
@@ -61,7 +61,15 @@ def make_server(port=8765,data_dir=None,host='127.0.0.1'):
             for p in sorted(s.root.rglob('*')):
                 if p.is_file() and lab.allowed(s,lab.path(s,p.relative_to(s.root).as_posix())):
                     files.append(p.relative_to(s.root).as_posix())
+            sources=[]
+            for item in s.last_tools:
+                if item.get('tool')!='search_files': continue
+                for match in (item.get('result') or {}).get('matches',[])[:12]:
+                    snippet=match.get('content','')
+                    if s.mode!='vulnerable': snippet=redact(snippet)
+                    sources.append({'path':match.get('path',''),'snippet':snippet[:4000]})
             return {'user':s.user,'files':files,'messages':s.messages[-80:],
+                    'sources':sources[:12],
                     'approvals':[{'id':a['id'],'tool':a['tool'],'path':a['arguments']['path'],'before':a['before'],'after':a['after']}
                        for a in s.approvals.values() if not a['used'] and a['user']==s.user]}
 

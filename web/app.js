@@ -35,7 +35,7 @@ function openCase(id){selected=config.scenarios.find(c=>c.id===id);$('scenario-n
 }
 async function executeCase(run){$('scenario-dialog').close();let response=await api('/api/case',{session:state.id,case:selected.id,run:false});state=response.state;renderState();
  if(run){response=await api('/api/run-case',{session:state.id,case:selected.id});state=response.state;renderState()}
- if(run){const r=response.result;$('case-result').innerHTML=`<div class="result-banner ${r.status==='PASS'?'pass':''}">${escapeHtml(r.id)} · ${r.status==='FAIL'?'Attack objective achieved':r.status==='PASS'?'No target damage observed':'Not run / error'}<small>Oracle: ${escapeHtml(r.oracle)}<br>${escapeHtml(r.kind)} / ${escapeHtml(r.backend)}</small></div>`;toast(`${r.id}: ${r.status}`)}
+ if(run){const r=response.result;const sourceHint=r.id==='V2'?'<br>Matching sources are visible in the employee Sources panel.':'';$('case-result').innerHTML=`<div class="result-banner ${r.status==='PASS'?'pass':''}">${escapeHtml(r.id)} · ${r.status==='FAIL'?'Attack objective achieved':r.status==='PASS'?'No target damage observed':'Not run / error'}<small>Oracle: ${escapeHtml(r.oracle)}<br>${escapeHtml(r.kind)} / ${escapeHtml(r.backend)}${sourceHint}</small></div>`;toast(`${r.id}: ${r.status}`)}
  else {$('prompt').value=selected.prompt;toast('Scenario loaded; preview a file and send a task. Use the run-experiment button for control cases.')}
 }
 async function sendPrompt(prompt){

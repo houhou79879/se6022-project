@@ -25,7 +25,7 @@ The Linux container is for cross-platform and CI reproduction; native Windows re
 docker compose up --build
 ```
 
-Open http://127.0.0.1:8765/console. Host port 8765 must be free. Runtime data lives in `/tmp/runtime` inside a `tmpfs`, so it is cleared on restart; use a dedicated bind mount if you need persistence. See `docs/DOCKER.md`. CI builds the image, runs 32 tests and performs an HTTP smoke test: [docker-linux](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml).
+Open http://127.0.0.1:8765/console. Host port 8765 must be free. Runtime data lives in `/tmp/runtime` inside a `tmpfs`, so it is cleared on restart; use a dedicated bind mount if you need persistence. See `docs/DOCKER.md`. CI builds the image, runs 33 tests and performs an HTTP smoke test: [docker-linux](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml).
 
 ## DeepSeek
 
@@ -40,7 +40,7 @@ The endpoint is the official `https://api.deepseek.com/chat/completions`. Only s
 1. Mock + Vulnerable: run a benign summary and confirm `users/alice/output/summary.md` is created.
 2. V1: inspect the attacker capability and injected content, run the experiment, and preview the real change to Alice's report.
 3. Switch to Defence-in-depth, rerun the same case, and observe that there is no target damage.
-4. V2 retrieval disclosure; V3 target-authorization control; V4 approval substitution; V6 artifact signature failure; V7 tool-result disclosure; V8 tool budget.
+4. V2 retrieval disclosure: the employee Sources panel shows the Bob payroll match in vulnerable mode; V3 target-authorization control; V4 approval substitution; V6 artifact signature failure; V7 tool-result disclosure; V8 tool budget.
 5. Comparison → run full comparison. Every case and policy gets an independent sandbox; click the evidence to return to that session.
 6. Select hardened and create a new session; Operations & report → pause/resume, restore files and the trusted release, run the KS/PSI drill.
 7. Refresh the review and export Markdown / JSON / CSV. GO applies only to the bounded teaching demo; missing experiment, drift or recovery evidence produces NO-GO.
@@ -62,7 +62,7 @@ The Mock only implements these teaching parsing rules; it is not a general langu
 | ID | Root cause | Owner | Fix |
 |---|---|---|---|
 | V1 | Document content elevated to instructions | A | Source isolation, instruction/data separation, tool authorization |
-| V2 | Retrieval not filtered by user | C | Pre-query authorization; keep unauthorized snippets out of context |
+| V2 | Retrieval not filtered by user | C | Pre-query authorization; authorized source rendering; keep unauthorized snippets out of context |
 | V3 | Missing effective target authorization (executor) | B | Execution-layer target authorization: path normalization + user-directory check + file-identity check |
 | V4 | Approval and execution parameters not bound | B | Bind user/action/path/content/version; one-time approval |
 | V5 | External text enters persistent memory | A | Disallow automatic persistence of external preferences; cleanup/restore |
@@ -103,4 +103,4 @@ The eight seed cases and one benign task are a demo/regression baseline, not a c
 
 ### Demonstrating the attack target itself
 
-The employee page shows only files, chat and approvals. Opening it directly creates an offline vulnerable workspace. To change the policy or use DeepSeek, create a new session in the console and then click "Open employee page". Both pages share the actual session and sandbox. Select V1 → load attack content only in the console, open the employee page and run a benign summary to demonstrate indirect injection. Return to the console and click "Refresh session" to inspect the operational evidence. The employee API returns only the files, messages and approvals visible in that session; this separation is still a trusted local demo, not a formal employee login or console authentication boundary.
+The employee page shows files, chat, the Sources panel and approvals. Opening it directly creates an offline vulnerable workspace. To change the policy or use DeepSeek, create a new session in the console and then click "Open employee page". Both pages share the actual session and sandbox. Select V1 → load attack content only in the console, open the employee page and run a benign summary to demonstrate indirect injection. Return to the console and click "Refresh session" to inspect the operational evidence. The employee API returns only the files, messages, Sources and approvals visible in that session; this separation is still a trusted local demo, not a formal employee login or console authentication boundary.

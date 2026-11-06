@@ -14,6 +14,9 @@ function render(){
  byId('files').replaceChildren(...state.files.map(path=>{const b=el('button','▤ '+path);b.onclick=()=>work(async()=>{const f=await request('file?path='+encodeURIComponent(path));byId('filename').textContent=path;byId('filetext').textContent=f.content;byId('preview').showModal()});return b}));
  byId('conversation').hidden=state.messages.length>0;byId('messages').hidden=!state.messages.length;
  byId('messages').replaceChildren(...state.messages.map(m=>{const box=el('div','');box.className='message '+(m.role==='user'?'user':'assistant');box.append(el('strong',m.role==='user'?name:'FileAgent'),el('p',m.content));return box}));
+ const sources=state.sources||[];
+ byId('sources').hidden=!sources.length;
+ byId('source-list').replaceChildren(...sources.map(s=>{const card=el('div','');card.className='source';card.append(el('strong',s.path),el('pre',s.snippet));return card}));
  byId('approvals').replaceChildren(...state.approvals.map(a=>{const box=el('div','');box.className='approval';const detail=el('details','');detail.append(el('summary','View before/after'),el('pre','Before\n'+a.before+'\n\nAfter\n'+a.after));const b=el('button','Approve and apply');b.onclick=()=>work(async()=>{const r=await request('approve',{approval:a.id});state=r.state;render();byId('status').textContent=r.status==='OK'?'File updated.':'Change was not applied.'});box.append(el('strong','Pending: '+a.path),detail,b);return box}));
 }
 async function work(fn){if(busy)return;busy=true;byId('status').textContent='Working…';byId('composer').querySelector('button').disabled=true;try{await fn();if(byId('status').textContent==='Working…')byId('status').textContent=''}catch(e){byId('status').textContent=e.message}finally{busy=false;byId('composer').querySelector('button').disabled=false}}

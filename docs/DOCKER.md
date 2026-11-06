@@ -97,7 +97,7 @@ V3 no longer calls the model and no longer depends on a hardlink precondition. `
 docker compose run --rm --no-deps fileagent python -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs the same build, 32 tests inside the Linux container, and an HTTP smoke test that starts the container and requests `/api/config`. Workflow: [.github/workflows/docker.yml](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml). This Windows 10 Home machine has no Docker/WSL2, so `docker build` is not run locally; the CI run is the Docker verification.
+GitHub Actions runs the same build, 33 tests inside the Linux container, and an HTTP smoke test that starts the container and requests `/api/config`. Workflow: [.github/workflows/docker.yml](https://github.com/houhou79879/se6022-project/actions/workflows/docker.yml). This Windows 10 Home machine has no Docker/WSL2, so `docker build` is not run locally; the CI run is the Docker verification.
 
 ## Expected results
 

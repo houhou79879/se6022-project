@@ -183,6 +183,7 @@ class Lab:
         s.memory.clear()
         s.approvals.clear()
         s.messages.clear()
+        s.last_tools.clear()
         self.sign_release(s)
         s.paused=False
         self.event(s,'recovery','RESTORED',f'Files restored: {restored}; memory cleared; trusted release reinstalled')
