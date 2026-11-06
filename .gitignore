@@ -1,0 +1,13 @@
+runtime/
+artifacts/
+__pycache__/
+*.pyc
+.venv/
+.env
+*.pem
+.codex-cache-backup*/
+tmp/
+
+# Course materials stay local; never publish them.
+materials/
+PROJECT_CONTEXT.md
