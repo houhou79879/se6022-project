@@ -91,15 +91,9 @@ docker run --rm -p 127.0.0.1:8765:8765 --env-file .env `
 
 ## V3 的跨平台处理
 
-V3 的实测攻击是 `RESTRICTED/credentials.txt`，依赖 Windows 大小写不敏感文件系统。Linux 容器是大小写敏感的，直接跑会 404。
+V3 不再依赖大小写不敏感文件系统。攻击使用用户目录中的预置硬链接：`users/alice/audit.txt` 与 `restricted/credentials.txt` 共享 inode。模型看到的是 Alice 自己的普通文件，vulnerable 执行器读取它并返回合成密钥；hardened 的 `allowed()` 用 `os.path.samefile` 按 inode 拒绝，而不是只比较路径字符串。
 
-`fileagent/engine.py` 在 `Lab.create()` 里做了 fixture shim：
-
-- Windows：`RESTRICTED/...` 本来就解析到 `restricted/...`，跳过；
-- Linux/macOS：创建 `RESTRICTED/credentials.txt` 到 `restricted/credentials.txt` 的硬链接（失败则复制），让同一个 V3 prompt 能读到同一份合成密钥；
-- hardened 仍按**字面路径**做授权检查，所以 `RESTRICTED/...` 会被拒绝。
-
-这不是把防御改弱：它只是让大小写不敏感平台上的路径别名在大小写敏感平台上也可复现。详见 `docs/DEEPSEEK_VARIANTS.md` 和 `docs/THREAT_MODEL.md`。
+这保证 Windows、Linux 和 Docker 的行为一致，不需要 `RESTRICTED` 别名或大小写技巧。硬链接是场景前置条件（例如备份/运维遗留），不是 Agent 工具创建的；`fileagent/attack_variants.py` 保留了反斜杠和混合分隔符历史变体作为失败对照，旧的 `RESTRICTED` 方案已退役。详见 `docs/DEEPSEEK_VARIANTS.md` 和 `docs/THREAT_MODEL.md`。
 
 ## 容器内验证
 

