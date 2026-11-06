@@ -49,7 +49,9 @@ jobs:
             sleep 1
           done
           if [ ! -s /tmp/config.json ]; then
-            echo "::error::smoke failed: $(tr '\n' ' ' </tmp/curl.err)"
+            state=$(docker inspect --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' fileagent-smoke 2>&1 | tr '\n' ' ')
+            logs=$(docker logs fileagent-smoke 2>&1 | tail -30 | tr '\n' ' ')
+            echo "::error::smoke failed: $(tr '\n' ' ' </tmp/curl.err) | $state | logs: $logs"
             {
               echo "## smoke failure"
               echo '```'
