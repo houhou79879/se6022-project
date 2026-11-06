@@ -30,9 +30,10 @@ COPY --chown=10001:10001 server.py README.md ./
 
 RUN mkdir -p /app/runtime && chown -R 10001:10001 /app
 
+# No VOLUME declaration: compose mounts /app/runtime as tmpfs so the non-root
+# process can always write. For `docker run`, pass `--tmpfs /app/runtime`.
 USER 10001:10001
 
-VOLUME ["/app/runtime"]
 EXPOSE 8765
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

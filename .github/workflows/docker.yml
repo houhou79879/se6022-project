@@ -30,17 +30,35 @@ jobs:
 
       - name: Start the server and smoke-test the HTTP surface
         run: |
+          set +e
+          trap 'docker rm -f fileagent-smoke >/dev/null 2>&1 || true' EXIT
           docker run -d --name fileagent-smoke \
             --read-only \
             --tmpfs /tmp \
+            --tmpfs /app/runtime \
             --cap-drop ALL \
             --security-opt no-new-privileges:true \
             -p 127.0.0.1:8765:8765 \
             fileagent-secops:ci
-          trap 'docker rm -f fileagent-smoke >/dev/null 2>&1 || true' EXIT
+          if [ $? -ne 0 ]; then
+            echo "::error::docker run failed"
+            exit 1
+          fi
           for i in $(seq 1 20); do
-            if curl -fsS http://127.0.0.1:8765/api/config >/dev/null 2>&1; then break; fi
+            curl -fsS http://127.0.0.1:8765/api/config >/tmp/config.json 2>/tmp/curl.err && break
             sleep 1
           done
-          curl -fsS http://127.0.0.1:8765/api/config | python -c "import json,sys; d=json.load(sys.stdin); assert len(d['scenarios'])==8; print('scenarios=', len(d['scenarios']))"
+          if [ ! -s /tmp/config.json ]; then
+            echo "::error::smoke failed: $(tr '\n' ' ' </tmp/curl.err)"
+            {
+              echo "## smoke failure"
+              echo '```'
+              docker ps -a
+              docker logs fileagent-smoke 2>&1 | tail -50
+              docker inspect --format '{{json .State}}' fileagent-smoke 2>&1
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          python -c "import json; d=json.load(open('/tmp/config.json')); assert len(d['scenarios'])==8; print('scenarios=', len(d['scenarios']))"
           docker logs --tail 20 fileagent-smoke

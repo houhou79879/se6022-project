@@ -14,7 +14,11 @@ services:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
     volumes:
-      - fileagent-runtime:/app/runtime
+      # Optional persistence: mount a dedicated host directory here instead of
+      # the tmpfs below, and make it writable by UID/GID 10001.
+      # - ./runtime-docker:/app/runtime
+      - type: tmpfs
+        target: /app/runtime
     read_only: true
     tmpfs:
       - /tmp
@@ -22,7 +26,4 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-
-volumes:
-  fileagent-runtime:
 

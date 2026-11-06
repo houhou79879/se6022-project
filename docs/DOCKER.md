@@ -22,10 +22,10 @@ docker compose up --build
 docker compose down
 ```
 
-清空所有合成会话、签名密钥和证据（下次启动重新生成）：
+清空所有合成会话、签名密钥和证据（运行数据在 `tmpfs`，`down` 即清空）：
 
 ```powershell
-docker compose down -v
+docker compose down
 ```
 
 只构建镜像：
@@ -39,8 +39,8 @@ docker build -t fileagent-secops:local .
 ```powershell
 docker run --rm -p 127.0.0.1:8765:8765 `
   --env-file .env `
-  -v fileagent-runtime:/app/runtime `
-  --read-only --tmpfs /tmp `
+  --tmpfs /tmp --tmpfs /app/runtime `
+  --read-only `
   --cap-drop ALL --security-opt no-new-privileges:true `
   fileagent-secops:local
 ```
@@ -65,14 +65,21 @@ docker compose up --build
 
 ## 数据与证据
 
-Compose 使用命名卷 `fileagent-runtime` 挂载到 `/app/runtime`。`runtime/sessions/<id>/sandbox` 是真实文件，`service-private` 保存审计、快照、签名清单和结果。
+Compose 把 `/app/runtime` 挂成 `tmpfs`，所以容器内可写、重启即清空；这是为了在没有 root/chown 的情况下让 UID 10001 始终能写。`runtime/sessions/<id>/sandbox` 是真实文件，`service-private` 保存审计、快照、签名清单和结果。
 
 ```powershell
 docker compose exec fileagent ls runtime/sessions
 docker compose cp fileagent:/app/runtime/sessions ./runtime-copy
 ```
 
-不要挂载整个项目根目录或用户目录；只挂 `runtime` 到一个专用卷/目录。
+需要在容器重建后保留证据时，把 `compose.yaml` 里的 tmpfs 换成专用 bind mount，并确保宿主机目录对 UID/GID 10001 可写：
+
+```yaml
+    volumes:
+      - ./runtime-docker:/app/runtime
+```
+
+不要挂载整个项目根目录或用户目录；只挂 `runtime` 到一个专用目录。
 
 ## 为什么固定 8765
 
@@ -109,10 +116,10 @@ GitHub Actions 会在 `ubuntu-latest` 上执行同样的构建、容器内 31 �
 容器提供了额外的 OS 边界：
 
 - 非 root（UID/GID 10001）；
-- 只读根文件系统，`/tmp` 为 tmpfs；
+- 只读根文件系统，`/tmp` 和 `/app/runtime` 为 tmpfs；
 - `cap_drop: ALL`，`no-new-privileges`；
 - 只绑定宿主机 `127.0.0.1:8765`；
-- 运行时目录用专用卷，不挂载宿主机用户目录。
+- 运行时目录用 tmpfs，不挂载宿主机用户目录。
 
 但它**不修复**应用层信任模型：操作员控制台没有正式认证，员工身份是模拟的，DeepSeek 需要出站网络。不要把端口暴露到公网。容器也不能替代 `allowed()`、审批绑定和签名校验。
 
