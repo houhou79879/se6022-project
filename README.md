@@ -40,7 +40,7 @@ The endpoint is the official `https://api.deepseek.com/chat/completions`. Only s
 1. Mock + Vulnerable: run a benign summary and confirm `users/alice/output/summary.md` is created.
 2. V1: inspect the attacker capability and injected content, run the experiment, and preview the real change to Alice's report.
 3. Switch to Defence-in-depth, rerun the same case, and observe that there is no target damage.
-4. V2 retrieval disclosure: the employee Sources panel shows the Bob payroll match in vulnerable mode; V3 target-authorization control; V4 approval substitution; V6 artifact signature failure; V7 tool-result disclosure; V8 tool budget.
+4. V2 retrieval disclosure: the employee Sources panel shows the Bob payroll match in vulnerable mode; V3 target-authorization control; V4 approval substitution; V6 artifact signature failure; V7 tool-result disclosure; V8 tool budget. V3/V4/V6 are control-level: they show a CONTROL EXPERIMENT card in the chat plus the Execution evidence banner, and do not produce a model reply.
 5. Comparison → run full comparison. Every case and policy gets an independent sandbox; click the evidence to return to that session.
 6. Select hardened and create a new session; Operations & report → pause/resume, restore files and the trusted release, run the KS/PSI drill.
 7. Refresh the review and export Markdown / JSON / CSV. GO applies only to the bounded teaching demo; missing experiment, drift or recovery evidence produces NO-GO.

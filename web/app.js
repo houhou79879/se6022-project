@@ -33,9 +33,16 @@ function openCase(id){selected=config.scenarios.find(c=>c.id===id);$('scenario-n
  $('scenario-detail').innerHTML=`<h4>Attacker capability</h4><p>${escapeHtml(selected.attacker)}</p><h4>Objective</h4><p>${escapeHtml(selected.objective)}</p><h4>Attack content / conditions</h4><pre>${escapeHtml(selected.payload)}</pre><h4>Oracle and control</h4><p>${escapeHtml(selected.oracle)}<br>${escapeHtml(selected.control)}</p><h4>Framework mapping</h4><p>${escapeHtml(selected.owasp)} · ${escapeHtml(selected.cia)}</p><p class="hint">Running creates a fresh Alice sandbox with the current backend and policy. V3/V4/V6 test the executor directly and do not consume model API.</p>`;
  $('scenario-dialog').showModal();
 }
+function controlResult(r){
+ const label=r.status==='FAIL'?'Attack objective achieved':r.status==='PASS'?'No target damage observed':'Not run / error';
+ let evidence=r.evidence||'';
+ try{evidence=JSON.stringify(JSON.parse(evidence),null,2)}catch(e){}
+ $('chat').insertAdjacentHTML('beforeend',`<div class="message assistant control-result"><div class="message-label">CONTROL EXPERIMENT / EXECUTOR</div><div class="bubble"><strong>${escapeHtml(r.id)} · ${escapeHtml(label)}</strong><p>${escapeHtml(r.oracle)}</p><pre>${escapeHtml(evidence)}</pre><p class="hint">Control-level: no model call. The executor ran directly; the full trace is under Execution evidence.</p></div></div>`);
+ $('chat').scrollTop=$('chat').scrollHeight;
+}
 async function executeCase(run){$('scenario-dialog').close();let response=await api('/api/case',{session:state.id,case:selected.id,run:false});state=response.state;renderState();
  if(run){response=await api('/api/run-case',{session:state.id,case:selected.id});state=response.state;renderState()}
- if(run){const r=response.result;const sourceHint=r.id==='V2'?'<br>Matching sources are visible in the employee Sources panel.':'';$('case-result').innerHTML=`<div class="result-banner ${r.status==='PASS'?'pass':''}">${escapeHtml(r.id)} · ${r.status==='FAIL'?'Attack objective achieved':r.status==='PASS'?'No target damage observed':'Not run / error'}<small>Oracle: ${escapeHtml(r.oracle)}<br>${escapeHtml(r.kind)} / ${escapeHtml(r.backend)}${sourceHint}</small></div>`;toast(`${r.id}: ${r.status}`)}
+ if(run){const r=response.result;const sourceHint=r.id==='V2'?'<br>Matching sources are visible in the employee Sources panel.':'';$('case-result').innerHTML=`<div class="result-banner ${r.status==='PASS'?'pass':''}">${escapeHtml(r.id)} · ${r.status==='FAIL'?'Attack objective achieved':r.status==='PASS'?'No target damage observed':'Not run / error'}<small>Oracle: ${escapeHtml(r.oracle)}<br>${escapeHtml(r.kind)} / ${escapeHtml(r.backend)}${sourceHint}</small></div>`;if(r.kind==='control')controlResult(r);toast(`${r.id}: ${r.status}`)}
  else {$('prompt').value=selected.prompt;toast('Scenario loaded; preview a file and send a task. Use the run-experiment button for control cases.')}
 }
 async function sendPrompt(prompt){
