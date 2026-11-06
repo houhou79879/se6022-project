@@ -35,9 +35,9 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual((s.root/'users/alice/report.md').read_text(),'new')
         self.assertEqual(self.lab.approve(s,r['approval_id'])['status'],'DENIED')
 
-    def test_eight_oracles_before_after(self):
+    def test_all_oracles_before_after(self):
         results=self.lab.evaluate()
-        self.assertEqual(len(results['rows']),8)
+        self.assertEqual(len(results['rows']),10)
         for r in results['rows']:
             with self.subTest(case=r['id']):
                 self.assertTrue(r['vulnerable']['attack_success'])

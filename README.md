@@ -1,6 +1,6 @@
 # FileAgent — AI Security Assessment & Operations Lab
 
-A local demo for the SE6022 four-person project: eight deliberately seeded vulnerabilities, three security policies, deterministic Mock / DeepSeek backends, a real file sandbox, approvals, signature verification, audit, recovery, evaluation and reporting.
+A local demo for the SE6022 four-person project: eight deliberately seeded root causes plus two Agent-level variants (V4A/V6A), three security policies, deterministic Mock / DeepSeek backends, a real file sandbox, approvals, signature verification, audit, recovery, evaluation and reporting.
 
 ## Run
 
@@ -40,7 +40,7 @@ The endpoint is the official `https://api.deepseek.com/chat/completions`. Only s
 1. Mock + Vulnerable: run a benign summary and confirm `users/alice/output/summary.md` is created.
 2. V1: inspect the attacker capability and injected content, run the experiment, and preview the real change to Alice's report.
 3. Switch to Defence-in-depth, rerun the same case, and observe that there is no target damage.
-4. V2 retrieval disclosure: the employee Sources panel shows the Bob payroll match in vulnerable mode; V3 target-authorization control; V4 approval substitution; V6 artifact signature failure; V7 tool-result disclosure; V8 tool budget. V3/V4/V6 are control-level: the chat shows an executor transcript (USER / OPERATOR / ATTACKER / TOOL / FILEAGENT) plus the Execution evidence banner, not a model reply.
+4. V2 retrieval disclosure: the employee Sources panel shows the Bob payroll match in vulnerable mode; V3 target-authorization control; V4 approval substitution; V4A approval substitution through the Agent `commit_change` tool; V6 artifact signature failure; V6A tampered-manifest `banner` tool; V7 tool-result disclosure; V8 tool budget. V3/V4/V6 are control-level: the chat shows an executor transcript (USER / OPERATOR / ATTACKER / TOOL / FILEAGENT) plus the Execution evidence banner, not a model reply. V4A/V6A are Agent-level and use real chat/tool calls.
 5. Comparison → run full comparison. Every case and policy gets an independent sandbox; click the evidence to return to that session.
 6. Select hardened and create a new session; Operations & report → pause/resume, restore files and the trusted release, run the KS/PSI drill.
 7. Refresh the review and export Markdown / JSON / CSV. GO applies only to the bounded teaching demo; missing experiment, drift or recovery evidence produces NO-GO.
@@ -57,7 +57,7 @@ The endpoint is the official `https://api.deepseek.com/chat/completions`. Only s
 
 The Mock only implements these teaching parsing rules; it is not a general language model. Injection examples use the readable `AGENT_INSTRUCTION: {tool, arguments}` form parsed by the simulator. DeepSeek's reaction must be measured separately.
 
-## Eight vulnerabilities / four owners
+## Eight root causes / four owners
 
 | ID | Root cause | Owner | Fix |
 |---|---|---|---|
@@ -65,12 +65,14 @@ The Mock only implements these teaching parsing rules; it is not a general langu
 | V2 | Retrieval not filtered by user | C | Pre-query authorization; authorized source rendering; keep unauthorized snippets out of context |
 | V3 | Missing effective target authorization (executor) | B | Execution-layer target authorization: path normalization + user-directory check + file-identity check |
 | V4 | Approval and execution parameters not bound | B | Bind user/action/path/content/version; one-time approval |
+| V4A | Same defect, Agent calls `commit_change` | B | Same binding check at the executor, not at the prompt |
 | V5 | External text enters persistent memory | A | Disallow automatic persistence of external preferences; cleanup/restore |
 | V6 | Unverified candidate tool manifest | D | Real Ed25519 verification before load; fail closed on tamper |
+| V6A | Same defect, Agent calls a manifest-backed tool | D | Signature gate before tool use; fail closed; no runtime tool reload |
 | V7 | Secrets in context/output/logs | C | Retrieval authorization, context minimization, output/log redaction |
 | V8 | Missing task execution budget | D | Step/byte/model-call/time budgets and pause |
 
-V3/V4/V6 are executor control tests, explicitly marked `executor`; they do not pretend to call a model. The other cases are Agent end-to-end tests. Direct/indirect/encoding variants are attack entry points and variants, not separate vulnerabilities. The three policies are combined security switches; the current design does not offer arbitrary combinations of all eight defences. Ablation is done through guardrails-only and direct executor regression tests.
+V3/V4/V6 are executor control tests, explicitly marked `executor`; they do not pretend to call a model. V4A/V6A are Agent-level variants that exercise the same control through real tool calls. The Agent tools include `commit_change` (consumes an approval created and approved outside the Agent; it cannot create or approve one) and `banner` (reads the current signed release manifest). The default Agent has no `prepare`, `approve` or `reload_tools` capability. The other cases are Agent end-to-end tests. Direct/indirect/encoding variants are attack entry points and variants, not separate vulnerabilities. The three policies are combined security switches; the current design does not offer arbitrary combinations of all eight defences. Ablation is done through guardrails-only and direct executor regression tests.
 
 ## Verification and artifacts
 
@@ -99,7 +101,7 @@ This is a local trusted operator console. The employee identity is selected by t
 
 Even vulnerable mode cannot escape the session sandbox and is capped at 24 tool calls. The service process is not an OS container and makes no claim of resistance to a host administrator or local malicious process; do not expose it to the internet. Artifact tampering only modifies the tool manifest and does not execute downloaded code. A signature does not prove that a tool is safe. Model weights are not managed by this project, so no model-weight signing is claimed.
 
-The eight seed cases and one benign task are a demo/regression baseline, not a comprehensive security or paper-level generalization. A full study would need a larger held-out set, multiple randomized runs, more benign tasks and ablations. Classifier training, FGSM/PGD, MIA, DP-SGD and certified robustness are not implemented; the report records them as N/A with the applicable reasons. Live DeepSeek calls require a personal key and are kept separate from Mock results.
+The ten cases (eight root causes plus V4A/V6A) and one benign task are a demo/regression baseline, not a comprehensive security or paper-level generalization. A full study would need a larger held-out set, multiple randomized runs, more benign tasks and ablations. Classifier training, FGSM/PGD, MIA, DP-SGD and certified robustness are not implemented; the report records them as N/A with the applicable reasons. Live DeepSeek calls require a personal key and are kept separate from Mock results.
 
 ### Demonstrating the attack target itself
 
