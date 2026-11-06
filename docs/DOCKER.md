@@ -1,0 +1,123 @@
+# Docker / Linux 复现
+
+这是可选的**跨平台复现**方式。原生 Windows 版本仍是课程提交和 viva 的主环境；Docker 版用于在 Linux、macOS、CI 或另一台机器上重建同一套实验。
+
+## 前置条件
+
+- Docker Engine 或 Docker Desktop（Linux containers）。
+- Windows 10/11 Home 可用 Docker Desktop + WSL2 后端；Windows 容器模式需要 Pro/Enterprise，本项目**不使用** Windows 容器。
+- 宿主机 8765 端口空闲。原生 `python server.py` 正在运行时，先停止它，否则端口冲突。
+
+## 快速开始
+
+```powershell
+docker compose up --build
+```
+
+打开 http://127.0.0.1:8765/console 。员工页是 http://127.0.0.1:8765/demo 。
+
+停止：
+
+```powershell
+docker compose down
+```
+
+清空所有合成会话、签名密钥和证据（下次启动重新生成）：
+
+```powershell
+docker compose down -v
+```
+
+只构建镜像：
+
+```powershell
+docker build -t fileagent-secops:local .
+```
+
+不使用 Compose 直接运行：
+
+```powershell
+docker run --rm -p 127.0.0.1:8765:8765 `
+  --env-file .env `
+  -v fileagent-runtime:/app/runtime `
+  --read-only --tmpfs /tmp `
+  --cap-drop ALL --security-opt no-new-privileges:true `
+  fileagent-secops:local
+```
+
+没有 `.env` 时去掉 `--env-file .env`，应用会以 Mock 后端启动；DeepSeek 会显示为未配置，不会回退。
+
+## DeepSeek 配置
+
+`.env` 只用于本机，不会进入镜像：
+
+- `.dockerignore` 排除 `.env`；
+- Dockerfile 只 `COPY` 代码、`web`、`tests`、`scripts`、`server.py`、`README.md` 和 `requirements.txt`，不会把 `.env` 带进去；
+- Compose 用 `${DEEPSEEK_API_KEY:-}` 在运行时注入，key 不落在镜像层。
+
+```powershell
+Copy-Item .env.example .env
+# 编辑 .env，填入 DEEPSEEK_API_KEY
+docker compose up --build
+```
+
+注意：`docker compose config` 会把替换后的环境变量打印出来，不要把它的输出贴到公开地方。
+
+## 数据与证据
+
+Compose 使用命名卷 `fileagent-runtime` 挂载到 `/app/runtime`。`runtime/sessions/<id>/sandbox` 是真实文件，`service-private` 保存审计、快照、签名清单和结果。
+
+```powershell
+docker compose exec fileagent ls runtime/sessions
+docker compose cp fileagent:/app/runtime/sessions ./runtime-copy
+```
+
+不要挂载整个项目根目录或用户目录；只挂 `runtime` 到一个专用卷/目录。
+
+## 为什么固定 8765
+
+`server.py` 的 `local()` 会校验 `Host`/`Origin` 是否匹配实际监听端口。Compose 固定 `127.0.0.1:8765:8765`，所以浏览器地址也必须是 `127.0.0.1:8765`。如果改成 `8080:8765`，Host 变成 `127.0.0.1:8080`，请求会被拒绝。
+
+## V3 的跨平台处理
+
+V3 的实测攻击是 `RESTRICTED/credentials.txt`，依赖 Windows 大小写不敏感文件系统。Linux 容器是大小写敏感的，直接跑会 404。
+
+`fileagent/engine.py` 在 `Lab.create()` 里做了 fixture shim：
+
+- Windows：`RESTRICTED/...` 本来就解析到 `restricted/...`，跳过；
+- Linux/macOS：创建 `RESTRICTED/credentials.txt` 到 `restricted/credentials.txt` 的硬链接（失败则复制），让同一个 V3 prompt 能读到同一份合成密钥；
+- hardened 仍按**字面路径**做授权检查，所以 `RESTRICTED/...` 会被拒绝。
+
+这不是把防御改弱：它只是让大小写不敏感平台上的路径别名在大小写敏感平台上也可复现。详见 `docs/DEEPSEEK_VARIANTS.md` 和 `docs/THREAT_MODEL.md`。
+
+## 容器内验证
+
+```powershell
+docker compose run --rm --no-deps fileagent python -m unittest discover -s tests -v
+```
+
+GitHub Actions 也会在 `ubuntu-latest` 上执行同样的构建和容器内测试（`.github/workflows/docker.yml`）。本机没有 Docker/WSL2，所以本地没有执行 `docker build`；以 CI 结果为准。
+
+## 预期结果
+
+- Mock：8 个案例 vulnerable 全部 FAIL（攻击成功），hardened 全部 PASS；V7 的 guardrails 会被关键词 rail 挡住。
+- DeepSeek：vulnerable 下 V2/V3/V4/V6/V7/V8 为 FAIL，V1/V5 为 PASS 但原因是模型拒绝执行（不是防御控制生效）；hardened 全部 PASS。
+- DeepSeek 有随机性，单次结果不是保证；重复运行用 `python scripts/deepseek_pilot.py --runs 3`。
+
+## 安全属性与边界
+
+容器提供了额外的 OS 边界：
+
+- 非 root（UID/GID 10001）；
+- 只读根文件系统，`/tmp` 为 tmpfs；
+- `cap_drop: ALL`，`no-new-privileges`；
+- 只绑定宿主机 `127.0.0.1:8765`；
+- 运行时目录用专用卷，不挂载宿主机用户目录。
+
+但它**不修复**应用层信任模型：操作员控制台没有正式认证，员工身份是模拟的，DeepSeek 需要出站网络。不要把端口暴露到公网。容器也不能替代 `allowed()`、审批绑定和签名校验。
+
+## 限制
+
+- 这是 Linux 容器版本，不覆盖 Windows 容器语义；`start.ps1` 不使用，入口是 `python server.py`。
+- 镜像不包含 `docs/`、`notebooks/` 和 `scripts/build_notebook.py`；notebook 构建请在原生环境执行（需要 IPython）。
+- 本机 Windows 10 Home 没有 Docker/WSL2，无法本地构建；Dockerfile 由 GitHub Actions 在 Linux 上验证。

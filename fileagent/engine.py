@@ -8,6 +8,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import threading
 import time
 import uuid
@@ -85,6 +86,19 @@ class Lab:
             p = root/name
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content, encoding='utf-8')
+        # V3 fixture shim: Windows already resolves RESTRICTED/... to restricted/...
+        # on its case-insensitive filesystem. On Linux/Docker that would 404, so
+        # create a hardlink alias (fallback: copy) to let the same measured case
+        # variant reach the same restricted bytes. Hardened mode still denies the
+        # alias because authorization is checked against the literal path.
+        restricted = root/'restricted'/'credentials.txt'
+        alias = root/'RESTRICTED'/'credentials.txt'
+        if restricted.exists() and not alias.exists():
+            alias.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                os.link(restricted, alias)
+            except OSError:
+                shutil.copyfile(restricted, alias)
         s = Session(sid,root,private,user,mode,backend,model or os.getenv('DEEPSEEK_MODEL','deepseek-flash'))
         self.sessions[sid] = s
         self.sign_release(s)

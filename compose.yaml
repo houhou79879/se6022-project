@@ -1,0 +1,28 @@
+services:
+  fileagent:
+    build:
+      context: .
+    image: fileagent-secops:local
+    container_name: fileagent-secops
+    init: true
+    ports:
+      # The app's Host/Origin check expects the browser port to match 8765.
+      - "127.0.0.1:8765:8765"
+    environment:
+      # Compose reads these from the local .env for substitution only. They are
+      # passed at runtime and are never baked into the image.
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+    volumes:
+      - fileagent-runtime:/app/runtime
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  fileagent-runtime:
+

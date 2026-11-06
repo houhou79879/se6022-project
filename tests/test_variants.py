@@ -55,6 +55,20 @@ class AttackVariantTests(unittest.TestCase):
                 self.assertEqual(scenario(case_id)['prompt'],
                                  variant(case_id, variant_id)['prompt'])
 
+    def test_v3_alias_is_available_cross_platform(self):
+        # Windows resolves RESTRICTED to restricted natively. On Linux/Docker the
+        # fixture alias must exist, and hardened must still deny the literal path.
+        with tempfile.TemporaryDirectory() as directory:
+            lab = Lab(Path(directory))
+            vulnerable = lab.create(user='alice', mode='vulnerable', backend='mock')
+            self.assertTrue((vulnerable.root / 'RESTRICTED' / 'credentials.txt').exists())
+            read = lab.tool(vulnerable, 'read_file', {'path': 'RESTRICTED/credentials.txt'})
+            self.assertEqual(read['status'], 'OK')
+            self.assertIn('DEMO-KEY-7F92', read['content'])
+            hardened = lab.create(user='alice', mode='hardened', backend='mock')
+            self.assertEqual(lab.tool(hardened, 'read_file',
+                                      {'path': 'RESTRICTED/credentials.txt'})['status'], 'DENIED')
+
 
 if __name__ == '__main__':
     unittest.main()

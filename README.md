@@ -17,6 +17,16 @@ python server.py
 
 本仓库只包含项目代码、测试、项目文档与生成的 notebook。课程 PDF、作业照片、课程 notebook、提取文本（`materials/`）以及课程阅读记录 `PROJECT_CONTEXT.md` 保留在本地，不进入版本库。`.env`、运行目录、签名私钥和生成的 `artifacts/` 也不会提交。
 
+## Docker（可选，跨平台复现）
+
+Linux 容器版用于换平台/CI 复现；原生 Windows 仍是课程演示和证据的主环境。容器以非 root、只读根文件系统、`cap_drop: ALL`、仅绑定 `127.0.0.1:8765` 运行，课程材料与 `.env` 不会进入镜像。
+
+```powershell
+docker compose up --build
+```
+
+打开 http://127.0.0.1:8765/console 。宿主机 8765 需空闲；数据在命名卷 `fileagent-runtime`。详见 `docs/DOCKER.md`。
+
 ## DeepSeek
 
 首次配置时，将 `.env.example` 复制为项目根目录的 `.env`，填写 `DEEPSEEK_API_KEY`。运行 `python server.py` 或 `./start.ps1` 时会读取 `.env`。终端里已设置的同名环境变量优先，修改后需重启服务。

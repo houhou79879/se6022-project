@@ -1,0 +1,26 @@
+# Never put local secrets or course material into the build context.
+.env
+.env.*
+!.env.example
+
+materials/
+PROJECT_CONTEXT.md
+
+.git/
+.github/
+runtime/
+artifacts/
+tmp/
+__pycache__/
+*.pyc
+.venv/
+*.pem
+.codex-cache-backup*/
+
+# Not needed by the server image.
+docs/
+notebooks/
+scripts/build_notebook.py
+Dockerfile
+compose.yaml
+

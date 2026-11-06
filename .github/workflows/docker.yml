@@ -1,0 +1,29 @@
+name: docker-linux
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the Linux image
+        run: docker build -t fileagent-secops:ci .
+
+      - name: Run the regression suite inside the container
+        run: |
+          docker run --rm \
+            --read-only \
+            --tmpfs /tmp \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            fileagent-secops:ci \
+            python -m unittest discover -s tests -v
