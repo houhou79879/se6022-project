@@ -17,7 +17,7 @@ Unlike the teaching mock, hardened FileAgent retains legal read/search/write fun
 5 Provenance: Ed25519 signed application tool manifest; actual clean verify, tamper rejection and reinstall. Not OpenSSF OMS and not model-weight signing.
 6 Monitoring: per-call results, bytes, calls, timing, alerts and JSONL evidence.
 7 Drift: controlled measured request-call distributions; two-sample KS statistic with seeded permutation p-value and PSI. No LLM confidence is invented.
-8 Red-team: eight root causes with per-case oracles; V4/V6 control-level versus other Agent tasks.
+8 Red-team: eight root causes with per-case oracles; V3/V4/V6 control-level versus other Agent tasks.
 9 Remediate: three configurations, independent retest and normal-task smoke; pause and snapshot recovery.
 10 Report: generated Markdown/JSON/CSV and NIST-mapped GO/NO-GO gate. Missing evidence blocks.
 

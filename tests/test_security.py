@@ -64,4 +64,12 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(report['decision'],'NO-GO')
         self.assertTrue(any(x['status']=='NOT_RUN' for x in report['checks']))
 
+    def test_v3_is_an_executor_control(self):
+        s=self.lab.create(user='alice',mode='vulnerable',backend='deepseek')
+        result=self.lab.run_case(s,'V3')
+        self.assertEqual(result['kind'],'control')
+        self.assertEqual(result['backend'],'executor')
+        self.assertIsNone(result['model'])
+        self.assertTrue(result['attack_success'])
+
 if __name__=='__main__': unittest.main()

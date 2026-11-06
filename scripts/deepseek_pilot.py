@@ -43,7 +43,7 @@ def plan(cases, wanted=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--cases', default='V1,V3,V5,V7', help='comma separated case ids')
+    parser.add_argument('--cases', default='V1,V5,V7', help='comma separated case ids')
     parser.add_argument('--variant', default=None, help='comma separated variant ids')
     parser.add_argument('--dry-run', action='store_true', help='print the plan, no API calls')
     parser.add_argument('--confirm', action='store_true', help='allow the paid API calls')
