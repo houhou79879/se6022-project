@@ -6,6 +6,10 @@ try:
     from fileagent.engine import Lab
 except ImportError:
     Lab = None
+from fileagent.paths import home
+
+ALICE=home('alice')
+BOB=home('bob')
 
 class SecurityTests(unittest.TestCase):
     def setUp(self):
@@ -24,15 +28,15 @@ class SecurityTests(unittest.TestCase):
 
     def test_hardened_cross_user_read_and_search(self):
         s=self.session()
-        self.assertEqual(self.lab.tool(s,'read_file',{'path':'users/bob/payroll.txt'})['status'],'DENIED')
+        self.assertEqual(self.lab.tool(s,'read_file',{'path':f'{BOB}/payroll.txt'})['status'],'DENIED')
         self.assertNotIn('PAYROLL-CANARY',str(self.lab.tool(s,'search_files',{'query':'PAYROLL-CANARY'})))
 
     def test_real_write_approval_and_replay(self):
         s=self.session()
-        r=self.lab.tool(s,'write_file',{'path':'users/alice/report.md','content':'new'})
+        r=self.lab.tool(s,'write_file',{'path':f'{ALICE}/report.md','content':'new'})
         self.assertEqual(r['status'],'PENDING')
         self.lab.approve(s,r['approval_id'])
-        self.assertEqual((s.root/'users/alice/report.md').read_text(),'new')
+        self.assertEqual((s.root/f'{ALICE}/report.md').read_text(),'new')
         self.assertEqual(self.lab.approve(s,r['approval_id'])['status'],'DENIED')
 
     def test_all_oracles_before_after(self):
@@ -46,9 +50,9 @@ class SecurityTests(unittest.TestCase):
 
     def test_snapshot_restore(self):
         s=self.session('vulnerable')
-        self.lab.tool(s,'write_file',{'path':'users/alice/report.md','content':'changed'})
+        self.lab.tool(s,'write_file',{'path':f'{ALICE}/report.md','content':'changed'})
         self.lab.restore(s)
-        self.assertIn('Original', (s.root/'users/alice/report.md').read_text())
+        self.assertIn('Original', (s.root/f'{ALICE}/report.md').read_text())
 
     def test_deepseek_missing_key_no_fallback(self):
         from unittest.mock import patch

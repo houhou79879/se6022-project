@@ -12,6 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from fileagent.engine import Lab  # noqa: E402
+from fileagent.paths import home  # noqa: E402
 
 
 def load_dotenv():
@@ -50,9 +51,9 @@ def main():
     evaluation = lab.evaluate(backend=args.backend, model=args.model)
     drift = lab.drift_drill()
     session = lab.create(mode='hardened', backend=args.backend, model=args.model)
-    lab.tool(session, 'write_file', {'path': 'users/alice/output/drill.md', 'content': 'Recovery drill'})
+    lab.tool(session, 'write_file', {'path': f'{home("alice")}/output/drill.md', 'content': 'Recovery drill'})
     lab.restore(session)
-    assert not (session.root / 'users/alice/output/drill.md').exists()
+    assert not (session.root / f'{home("alice")}/output/drill.md').exists()
     report = lab.report(session, evaluation['id'])
     (out / f'assessment{suffix}.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     (out / f'assessment{suffix}.md').write_text(lab.markdown(report), encoding='utf-8')

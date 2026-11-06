@@ -7,6 +7,10 @@ from unittest.mock import patch
 from fileagent.attack_variants import VARIANTS, patch_for, variant
 from fileagent.engine import Lab
 from fileagent.scenarios import scenario
+from fileagent.paths import home
+
+ALICE=home('alice')
+BOB=home('bob')
 
 
 class AttackVariantTests(unittest.TestCase):
@@ -60,19 +64,19 @@ class AttackVariantTests(unittest.TestCase):
             lab = Lab(Path(directory))
             vulnerable = lab.create(user='alice', mode='vulnerable', backend='mock')
             os.link(vulnerable.root / 'restricted/credentials.txt',
-                    vulnerable.root / 'users/alice/audit.txt')
-            read = lab.tool(vulnerable, 'read_file', {'path': 'users/alice/audit.txt'})
+                    vulnerable.root / f'{ALICE}/audit.txt')
+            read = lab.tool(vulnerable, 'read_file', {'path': f'{ALICE}/audit.txt'})
             self.assertEqual(read['status'], 'OK')
             self.assertIn('DEMO-KEY-7F92', read['content'])
             hardened = lab.create(user='alice', mode='hardened', backend='mock')
             os.link(hardened.root / 'restricted/credentials.txt',
-                    hardened.root / 'users/alice/audit.txt')
+                    hardened.root / f'{ALICE}/audit.txt')
             self.assertEqual(lab.tool(hardened, 'read_file',
-                                      {'path': 'users/alice/audit.txt'})['status'], 'DENIED')
-            os.link(hardened.root / 'users/bob/payroll.txt',
-                    hardened.root / 'users/alice/payroll-link.txt')
+                                      {'path': f'{ALICE}/audit.txt'})['status'], 'DENIED')
+            os.link(hardened.root / f'{BOB}/payroll.txt',
+                    hardened.root / f'{ALICE}/payroll-link.txt')
             self.assertEqual(lab.tool(hardened, 'read_file',
-                                      {'path': 'users/alice/payroll-link.txt'})['status'], 'DENIED')
+                                      {'path': f'{ALICE}/payroll-link.txt'})['status'], 'DENIED')
 
 
 if __name__ == '__main__':

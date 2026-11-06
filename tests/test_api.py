@@ -9,6 +9,10 @@ from unittest.mock import patch
 
 from server import make_server
 from fileagent.engine import Lab
+from fileagent.paths import home
+
+ALICE = home('alice')
+BOB = home('bob')
 
 class ApiTests(unittest.TestCase):
     @classmethod
@@ -59,11 +63,11 @@ class ApiTests(unittest.TestCase):
                 data=json.dumps(data).encode() if data is not None else None))
         with employee('state') as r: state=json.load(r)
         self.assertNotIn('events',state)
-        self.assertNotIn('users/bob/payroll.txt',state['files'])
-        with self.assertRaises(urllib.error.HTTPError) as caught: employee('file?path=users/bob/payroll.txt')
+        self.assertNotIn(f'{BOB}/payroll.txt',state['files'])
+        with self.assertRaises(urllib.error.HTTPError) as caught: employee('file?path='+BOB+'/payroll.txt')
         self.assertEqual(caught.exception.code,403)
         with employee('chat',{'prompt':'Read shared/phoenix.md and summarise it'}) as r: self.assertEqual(json.load(r)['status'],'OK')
-        with self.request('/api/file?session='+target['id']+'&path=users/alice/report.md') as r:
+        with self.request('/api/file?session='+target['id']+'&path='+ALICE+'/report.md') as r:
             self.assertIn('INJECTED-REPORT',json.load(r)['content'])
 
     def test_pause_does_not_wait_for_agent_lock(self):
@@ -97,7 +101,7 @@ class ProviderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             lab=Lab(Path(directory)); s=lab.create(backend='deepseek')
             replies=[{'model':'fixture-model','usage':{'prompt_tokens':10},'choices':[{'message':{'role':'assistant','content':None,
-                     'tool_calls':[{'id':'call1','type':'function','function':{'name':'read_file','arguments':json.dumps({'path':'users/bob/payroll.txt'})}}]}}]},
+                     'tool_calls':[{'id':'call1','type':'function','function':{'name':'read_file','arguments':json.dumps({'path':f'{BOB}/payroll.txt'})}}]}}]},
                      {'usage':{'completion_tokens':4},'choices':[{'message':{'role':'assistant','content':'Access was denied.'}}]}]
             requests=[]
             class Response:
