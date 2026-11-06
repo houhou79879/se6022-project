@@ -23,7 +23,7 @@ Unlike the teaching mock, hardened FileAgent retains legal read/search/write fun
 
 ## NIST AI RMF
 
-GOVERN: scope, four owners, risk register and non-compensable gates.
+GOVERN: scope, risk register and non-compensable gates.
 MAP: actors, entry points, assets and trust boundaries.
 MEASURE: per-case damage, tool attempts, normal-task outcome, overhead, integrity checks and drift.
 MANAGE: hardening, pause/isolation, cleanup/recovery and release review.

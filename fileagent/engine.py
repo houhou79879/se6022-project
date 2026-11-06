@@ -523,7 +523,7 @@ class Lab:
                        'method':'Evidence-backed teaching score; not an industry maturity certification'},
             'drift':self.last_drift,'telemetry':{'tool_events':len(s.telemetry),'bytes_last_request':s.bytes_read,
                  'model_usage':s.usage,'model':s.model,'synthetic_data_only':True},
-            'rmf':{'GOVERN':'Scenario scope, employee policy, hard release gates, four accountable owners',
+            'rmf':{'GOVERN':'Scenario scope, employee policy and hard release gates',
                    'MAP':'Eight root causes, attacker capabilities and trust boundaries; see threat model',
                    'MEASURE':'Per-case file/secret/budget oracles, utility smoke, audit and drift samples',
                    'MANAGE':'Pause, restore snapshots, clear memory, verify release, re-test'},

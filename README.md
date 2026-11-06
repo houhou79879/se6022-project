@@ -1,6 +1,6 @@
 # FileAgent — AI Security Assessment & Operations Lab
 
-A local demo for the SE6022 four-person project: eight deliberately seeded root causes plus two Agent-level variants (V4A/V6A), three security policies, deterministic Mock / DeepSeek backends, a real file sandbox, approvals, signature verification, audit, recovery, evaluation and reporting.
+A local demo for the SE6022 project: eight deliberately seeded root causes plus two Agent-level variants (V4A/V6A), three security policies, deterministic Mock / DeepSeek backends, a real file sandbox, approvals, signature verification, audit, recovery, evaluation and reporting.
 
 ## Run
 
@@ -66,20 +66,20 @@ The Agent sees only the hash paths (and its own system-prompt path); the operato
 
 The Mock only implements these teaching parsing rules; it is not a general language model. Injection examples use the readable `AGENT_INSTRUCTION: {tool, arguments}` form parsed by the simulator. DeepSeek's reaction must be measured separately.
 
-## Eight root causes / four owners
+## Eight root causes
 
-| ID | Root cause | Owner | Fix |
-|---|---|---|---|
-| V1 | Document content elevated to instructions | A | Source isolation, instruction/data separation, tool authorization |
-| V2 | Retrieval not filtered by user | C | Pre-query authorization; authorized source rendering; keep unauthorized snippets out of context |
-| V3 | Missing effective target authorization (executor) | B | Execution-layer target authorization: path normalization + user-directory check + file-identity check |
-| V4 | Approval and execution parameters not bound | B | Bind user/action/path/content/version; one-time approval |
-| V4A | Same defect, Agent calls `commit_change` | B | Same binding check at the executor, not at the prompt |
-| V5 | External text enters persistent memory | A | Disallow automatic persistence of external preferences; cleanup/restore |
-| V6 | Unverified candidate tool manifest | D | Real Ed25519 verification before load; fail closed on tamper |
-| V6A | Same defect, Agent calls a manifest-backed tool | D | Signature gate before tool use; fail closed; no runtime tool reload |
-| V7 | Secrets in context/output/logs | C | Retrieval authorization, context minimization, output/log redaction |
-| V8 | Missing task execution budget | D | Step/byte/model-call/time budgets and pause |
+| ID | Root cause | Fix |
+|---|---|---|
+| V1 | Document content elevated to instructions | Source isolation, instruction/data separation, tool authorization |
+| V2 | Retrieval not filtered by user | Pre-query authorization; authorized source rendering; keep unauthorized snippets out of context |
+| V3 | Missing effective target authorization (executor) | Execution-layer target authorization: path normalization + user-directory check + file-identity check |
+| V4 | Approval and execution parameters not bound | Bind user/action/path/content/version; one-time approval |
+| V4A | Same defect, Agent calls `commit_change` | Same binding check at the executor, not at the prompt |
+| V5 | External text enters persistent memory | Disallow automatic persistence of external preferences; cleanup/restore |
+| V6 | Unverified candidate tool manifest | Real Ed25519 verification before load; fail closed on tamper |
+| V6A | Same defect, Agent calls a manifest-backed tool | Signature gate before tool use; fail closed; no runtime tool reload |
+| V7 | Secrets in context/output/logs | Retrieval authorization, context minimization, output/log redaction |
+| V8 | Missing task execution budget | Step/byte/model-call/time budgets and pause |
 
 V3/V4/V6 are executor control tests, explicitly marked `executor`; they do not pretend to call a model. V4A/V6A are Agent-level variants that exercise the same control through real tool calls. The Agent tools include `commit_change` (consumes an approval created and approved outside the Agent; it cannot create or approve one) and `banner` (reads the current signed release manifest). The default Agent has no `prepare`, `approve` or `reload_tools` capability. The other cases are Agent end-to-end tests. Direct/indirect/encoding variants are attack entry points and variants, not separate vulnerabilities. The three policies are combined security switches; the current design does not offer arbitrary combinations of all eight defences. Ablation is done through guardrails-only and direct executor regression tests.
 

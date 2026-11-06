@@ -27,9 +27,9 @@ function renderState(){
  $('approvals').innerHTML=state.approvals.map(a=>`<div class="approval"><strong>Pending: ${escapeHtml(a.tool)} / ${escapeHtml(a.arguments.path)}</strong><details><summary>View before/after</summary><pre>BEFORE\n${escapeHtml(a.before)}\n\nAFTER\n${escapeHtml(a.after)}</pre></details><button class="secondary" data-approve="${a.id}">Approve and apply this exact change</button></div>`).join('');
 }
 function renderScenarios(){
- $('scenarios').innerHTML=config.scenarios.map(c=>`<button class="scenario" data-case="${c.id}"><span class="scenario-num">${c.id}</span><span><strong>${escapeHtml(c.title)}</strong><small>${escapeHtml(c.en)} · ${c.owner}</small></span><span class="scenario-arrow">↗</span></button>`).join('');
+ $('scenarios').innerHTML=config.scenarios.map(c=>`<button class="scenario" data-case="${c.id}"><span class="scenario-num">${c.id}</span><span><strong>${escapeHtml(c.title)}</strong><small>${escapeHtml(c.en)}</small></span><span class="scenario-arrow">↗</span></button>`).join('');
 }
-function openCase(id){selected=config.scenarios.find(c=>c.id===id);$('scenario-number').textContent=`${id} / OWNER ${selected.owner} / ${selected.kind==='control'?'CONTROL-LEVEL':'AGENT END-TO-END'}`;$('scenario-title').textContent=selected.title;
+function openCase(id){selected=config.scenarios.find(c=>c.id===id);$('scenario-number').textContent=`${id} / ${selected.kind==='control'?'CONTROL-LEVEL':'AGENT END-TO-END'}`;$('scenario-title').textContent=selected.title;
  $('scenario-detail').innerHTML=`<h4>Attacker capability</h4><p>${escapeHtml(selected.attacker)}</p><h4>Objective</h4><p>${escapeHtml(selected.objective)}</p><h4>Attack content / conditions</h4><pre>${escapeHtml(selected.payload)}</pre><h4>Oracle and control</h4><p>${escapeHtml(selected.oracle)}<br>${escapeHtml(selected.control)}</p><h4>Framework mapping</h4><p>${escapeHtml(selected.owasp)} · ${escapeHtml(selected.cia)}</p><p class="hint">Running creates a fresh Alice sandbox with the current backend and policy. V3/V4/V6 test the executor directly and do not consume model API.</p>`;
  $('scenario-dialog').showModal();
 }
